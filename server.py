@@ -1,3 +1,4 @@
+import sys
 import socket
 import threading
 
@@ -5,12 +6,14 @@ import threading
 clients = {}
 
 # Function to initialize the server socket
-def initialize_server(port):
-    # Create a TCP/IP socket
+def initialize_server():
+    if len(sys.argv) != 2:
+        print("usage: python3 server.py <svr_port>")
+        sys.exit(1)
+
+    port = int(sys.argv[1])
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Bind the socket to the server address and port
     server_socket.bind(('', port))
-    # Enable the server to accept connections, with a backlog of 10 clients
     server_socket.listen(10)
     return server_socket
 
@@ -87,10 +90,9 @@ def broadcast(message, sender=None):
 
 # Main function to start the server
 def main():
-    port = 12345  # Define the port number
-    server_socket = initialize_server(port)
-    print(f"Server started on port {port}")
-
+    server_socket = initialize_server()
+    print(f"Server started on port {sys.argv[1]}")
+    
     # Accept new connections indefinitely
     while True:
         client_socket, client_address = server_socket.accept()
