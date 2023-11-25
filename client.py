@@ -26,7 +26,7 @@ def is_alphanumeric(string: str):
 
 # process response messages from the server
 def process_server_response(message):
-    pass
+    print(message)
 
 def main():
     if (len(sys.argv) != 3):

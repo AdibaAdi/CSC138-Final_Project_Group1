@@ -33,8 +33,8 @@ def client_handler(client_socket, client_address):
             # Handle JOIN command
             if command == "JOIN":
                 # Make sure the appropriate number of arguments were provided
-                if len(args) != 1 or not is_alphanumeric(args[0]):
-                    client_socket.send("JOIN Error:Bad Username".encode())
+                if len(args) != 1:
+                    client_socket.send("JOIN Error:Bad number of arguments".encode())
                     break
 
                 username = args[0]
@@ -130,10 +130,15 @@ def main():
     print(f"Server started on port {port}")
 
     # Accept new connections indefinitely
-    while True:
-        client_socket, client_address = server_socket.accept()
-        # Start a new thread to handle each client
-        threading.Thread(target=client_handler, args=(client_socket, client_address)).start()
+    try:
+        while True:
+            client_socket, client_address = server_socket.accept()
+            # Start a new thread to handle each client
+            threading.Thread(target=client_handler, args=(client_socket, client_address)).start()
+    except:
+        server_socket.close()
+        return 1
+    
 
 # Check if the script is the main program and execute it
 if __name__ == "__main__":
