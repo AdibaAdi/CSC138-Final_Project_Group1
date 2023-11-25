@@ -4,7 +4,7 @@ from socket import *
 import sys
 
 #TCP socket
-cli_socket = socket(AF_INET, SOCK_STREAM).settimeout(10)    
+cli_socket = socket(AF_INET, SOCK_STREAM)   
 server_name = ''
 server_port = 0
 client_is_connected = False
