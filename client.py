@@ -3,26 +3,24 @@
 from socket import *
 import sys
 
-# "JOIN" command to join the chatroom
-def send_join_request(server_name, server_port, username):
-    print("join")
+#TCP socket
+cli_socket = socket(AF_INET, SOCK_STREAM).settimeout(10)    
+server_name = ''
+server_port = 0
+client_is_connected = False
 
-# "LIST" command to list all the users in the chatroom
-def send_list_request(server_name, server_port):
-    print("list")   
+# send a message to the server then wait to receive the response
+def send_and_receive(message:str):
+    try:
+        cli_socket.sendto(message.encode(),(server_name, server_port))
+        return cli_socket.recv(1024).decode()
+    except:
+        return ''
 
-# "MESG" command to send a message to a specific user
-def send_message_request(server_name, server_port):
-    print("message")
 
-# "BCST" command to broadcast a message to all the users in the chatroom
-def send_broadcast_request(server_name, server_port):
-    print("broadcast")
-
-# "QUIT" command to quit the chatroom
-def send_quit_request(server_name, server_port):
-    print("quit")
-
+# process response messages from the server
+def process_server_response(message):
+    pass
 
 def main():
     if (len(sys.argv) != 3):
@@ -30,27 +28,40 @@ def main():
         sys.exit(1)
     server_name = sys.argv[1]
     server_port = int(sys.argv[2])
-    # TCP socket
-    cli_socket = socket(AF_INET, SOCK_STREAM)
-    cli_socket.connect((server_name, server_port))
 
-    is_client_connected = True
-    while is_client_connected:
-        userCommand = input("")
-        # TODO: handle other inputs for each command
-        if userCommand == "JOIN":
-            username = input("Enter your username: ")
-            send_join_request(server_name, server_port, username)
-        elif userCommand == "LIST":
-            send_list_request(server_name, server_port)
-        elif userCommand == "MESG":
-            send_message_request(server_name, server_port)
-        elif userCommand == "BCST":
-            send_broadcast_request(server_name, server_port)
-        elif userCommand == "QUIT":
-            send_quit_request(server_name, server_port)
-        else:
-            print("Invalid command. Please try again.")
+    #Try to connect and make sure the connection worked
+    try:
+        cli_socket.connect((server_name, server_port))
+    except:
+        print("Connection failed!")
+        sys.exit(1)
+
+    #TODO: retool this with new paradigm
+    #Prompt user to send JOIN command with their user name
+    join_command_is_valid = False
+    while not join_command_is_valid:
+        join_command = input("Enter JOIN followed by your username: ")
+        join_args = join_command.split()
+
+        # if the user's input is invalid in any way, continue to prompt for valid input
+        if len(join_args != 2): continue
+        if len(join_args[1] < 1): continue
+        if not is_alphanumeric(join_args[1]): continue
+        if join_args[0] != "JOIN": continue
+        
+        join_command_is_valid = True
+    
+    #Send the JOIN request
+    server_response = send_and_receive(join_command)
+
+    
+    while client_is_connected:
+        userCommand = input(":")
+        process_server_response(send_and_receive(userCommand))
+
+    cli_socket.close()
+    return 0
+
 
 if __name__ == "__main__":
     main()

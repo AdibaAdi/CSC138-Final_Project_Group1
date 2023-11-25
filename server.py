@@ -5,6 +5,7 @@ import threading
 # Global dictionary to hold client connections (username: socket)
 clients = {}
 
+client_is_connected = True
 # Function to initialize the server socket
 def initialize_server():
     if len(sys.argv) != 2:
@@ -16,6 +17,13 @@ def initialize_server():
     server_socket.bind(('', port))
     server_socket.listen(10)
     return server_socket
+
+# checks if a string consists of only letters and numbers
+def is_alphanumeric(string: str):
+    for c in string:
+        if not ((c.upper() >= 'A' and c.upper() < 'Z') or (c >= '0' and c <= '9')):
+            return False
+    return True
 
 # Function to handle each client connection
 def client_handler(client_socket, client_address):
@@ -32,36 +40,63 @@ def client_handler(client_socket, client_address):
 
             # Handle JOIN command
             if command == "JOIN":
+                # Make sure the appropriate number of arguments were provided
+                if len(args) != 1 or not is_alphanumeric(args[0]):
+                    client_socket.send("JOIN Error:Bad Username".encode())
+                    break
+
                 username = args[0]
                 # Check if username already exists or if client limit is reached
-                if username in clients or len(clients) >= 10:
-                    client_socket.send("Error: Cannot join".encode())
+                if username in clients:
+                    client_socket.send("JOIN Error:Username taken".encode())
                     break
+                
+                if len(clients) >= 10:
+                    client_socket.send("JOIN Error:Too Many Users".encode())
+                    break
+                
                 # Add the client to the clients dictionary
                 clients[username] = client_socket
+
+
                 # Broadcast join message to other clients
                 broadcast(f"{username} has joined the chat!", username)
+
+                # Report back to the client they've successfully been added
+                client_socket.send("JOIN Success:Connected to server!")
 
             # Handle LIST command
             elif command == "LIST":
                 # Send a list of all connected clients to the requester
                 client_list = "\n".join(clients.keys())
-                client_socket.send(client_list.encode())
+                client_socket.send(f"LIST Success:{client_list}".encode())
 
             # Handle MESG command
             elif command == "MESG":
+                # Make sure the correct number of args has been passed
+                if len(args) < 2:
+                    client_socket.send(f"MESG Error: No Message")
+                    continue
+
+                # parse user and message 
                 target_user, user_message = args[0], " ".join(args[1:])
+
                 # Check if the target user exists and send them the message
                 if target_user in clients:
                     clients[target_user].send(f"{username} (private): {user_message}".encode())
+                    client_socket.send(f"MESG Success: Message sent.")
+                    continue
                 else:
-                    client_socket.send(f"Error: User {target_user} not found".encode())
+                    client_socket.send(f"MESG Error: User {target_user} not found".encode())
+                    continue
 
             # Handle BCST command
             elif command == "BCST":
                 broadcast_message = " ".join(args)
                 # Broadcast the message to all clients except the sender
                 broadcast(f"{username}: {broadcast_message}", username)
+                client_socket.send(f"BCST Success: Message Broadcast".encode())
+                break
 
             # Handle QUIT command
             elif command == "QUIT":
