@@ -1,6 +1,7 @@
 import sys
 import socket
 import threading
+import sys
 
 # Global dictionary to hold client connections (username: socket)
 clients = {}
@@ -14,16 +15,10 @@ def initialize_server():
 
     port = int(sys.argv[1])
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('', port))
+    # Bind the socket to the server address and port
     server_socket.listen(10)
     return server_socket
 
-# checks if a string consists of only letters and numbers
-def is_alphanumeric(string: str):
-    for c in string:
-        if not ((c.upper() >= 'A' and c.upper() < 'Z') or (c >= '0' and c <= '9')):
-            return False
-    return True
 
 # Function to handle each client connection
 def client_handler(client_socket, client_address):
@@ -41,8 +36,8 @@ def client_handler(client_socket, client_address):
             # Handle JOIN command
             if command == "JOIN":
                 # Make sure the appropriate number of arguments were provided
-                if len(args) != 1 or not is_alphanumeric(args[0]):
-                    client_socket.send("JOIN Error:Bad Username".encode())
+                if len(args) != 1:
+                    client_socket.send("JOIN Error:Bad number of arguments".encode())
                     break
 
                 username = args[0]
@@ -63,19 +58,21 @@ def client_handler(client_socket, client_address):
                 broadcast(f"{username} has joined the chat!", username)
 
                 # Report back to the client they've successfully been added
-                client_socket.send("JOIN Success:Connected to server!")
+                client_socket.send("JOIN Success:Connected to server!".encode())
+                continue
 
             # Handle LIST command
             elif command == "LIST":
                 # Send a list of all connected clients to the requester
                 client_list = "\n".join(clients.keys())
                 client_socket.send(f"LIST Success:{client_list}".encode())
+                continue
 
             # Handle MESG command
             elif command == "MESG":
                 # Make sure the correct number of args has been passed
                 if len(args) < 2:
-                    client_socket.send(f"MESG Error: No Message")
+                    client_socket.send(f"MESG Error: No Message".encode())
                     continue
 
                 # parse user and message 
@@ -96,7 +93,7 @@ def client_handler(client_socket, client_address):
                 # Broadcast the message to all clients except the sender
                 broadcast(f"{username}: {broadcast_message}", username)
                 client_socket.send(f"BCST Success: Message Broadcast".encode())
-                break
+                continue
 
             # Handle QUIT command
             elif command == "QUIT":
@@ -104,7 +101,8 @@ def client_handler(client_socket, client_address):
 
             # Handle unknown commands
             else:
-                client_socket.send("Unknown command".encode())
+                client_socket.send("NULL Error: Unknown command".encode())
+                continue
 
         except Exception as e:
             print(f"Error: {e}")
@@ -112,6 +110,7 @@ def client_handler(client_socket, client_address):
 
     # Remove the client from the list and close the connection
     if username:
+        client_socket.send("QUIT Success: Disconnected from server.".encode())
         client_socket.close()
         del clients[username]
         # Broadcast a message informing others of the client's departure
@@ -121,18 +120,36 @@ def client_handler(client_socket, client_address):
 def broadcast(message, sender=None):
     for username, client_socket in clients.items():
         if username != sender:
-            client_socket.send(message.encode())
+            try:
+                client_socket.send(message.encode())
+            except Exception as e:
+                print("Error: {e}")
 
 # Main function to start the server
 def main():
-    server_socket = initialize_server()
-    print(f"Server started on port {sys.argv[1]}")
+    if(len(sys.argv) != 2):
+        print("usage: python3 server.py <svr_port>")
+        sys.exit(1)
+
     
+    port = sys.argv[1]  # Define the port number
+    server_socket = initialize_server(port)
+    print(f"Server started on port {port}")
+
     # Accept new connections indefinitely
-    while True:
-        client_socket, client_address = server_socket.accept()
-        # Start a new thread to handle each client
-        threading.Thread(target=client_handler, args=(client_socket, client_address)).start()
+    try:
+        while True:
+            client_socket, client_address = server_socket.accept()
+            # Start a new thread to handle each client
+            threading.Thread(target=client_handler, args=(client_socket, client_address)).start()
+    except KeyboardInterrupt as ki:
+        server_socket.close()
+        return 0
+    except Exception as e:
+        server_socket.close()
+        print(f"Error: {e}")
+        return 1
+    
 
 # Check if the script is the main program and execute it
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from socket import *
 import sys
 
 #TCP socket
-cli_socket = socket(AF_INET, SOCK_STREAM).settimeout(10)    
+cli_socket = socket(AF_INET, SOCK_STREAM)   
 server_name = ''
 server_port = 0
 client_is_connected = False
@@ -15,12 +15,21 @@ def send_and_receive(message:str):
         cli_socket.sendto(message.encode(),(server_name, server_port))
         return cli_socket.recv(1024).decode()
     except:
-        return ''
+        return 'Failed to get Response'
 
+# checks if a string consists of only letters and numbers
+def is_alphanumeric(string: str):
+    for c in string:
+        if not ((c.upper() >= 'A' and c.upper() < 'Z') or (c >= '0' and c <= '9')):
+            return False
+    return True
 
 # process response messages from the server
 def process_server_response(message):
-    pass
+    global client_is_connected
+    print(message)
+    if message.split(':')[0] == "QUIT Success":
+        client_is_connected = False
 
 def main():
     if (len(sys.argv) != 3):
@@ -44,8 +53,8 @@ def main():
         join_args = join_command.split()
 
         # if the user's input is invalid in any way, continue to prompt for valid input
-        if len(join_args != 2): continue
-        if len(join_args[1] < 1): continue
+        if len(join_args) != 2: continue
+        if len(join_args[1]) < 1: continue
         if not is_alphanumeric(join_args[1]): continue
         if join_args[0] != "JOIN": continue
         
@@ -53,7 +62,8 @@ def main():
     
     #Send the JOIN request
     server_response = send_and_receive(join_command)
-
+    if server_response.split(':')[0] == "JOIN Success":
+        client_is_connected = True
     
     while client_is_connected:
         userCommand = input(":")
