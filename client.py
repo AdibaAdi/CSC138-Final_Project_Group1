@@ -59,7 +59,8 @@ def main():
     
     #Send the JOIN request
     server_response = send_and_receive(join_command)
-
+    if server_response.split(':')[0] == "JOIN Success":
+        client_is_connected = True
     
     while client_is_connected:
         userCommand = input(":")
