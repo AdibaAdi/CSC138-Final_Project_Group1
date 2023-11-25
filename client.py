@@ -17,6 +17,12 @@ def send_and_receive(message:str):
     except:
         return ''
 
+# checks if a string consists of only letters and numbers
+def is_alphanumeric(string: str):
+    for c in string:
+        if not ((c.upper() >= 'A' and c.upper() < 'Z') or (c >= '0' and c <= '9')):
+            return False
+    return True
 
 # process response messages from the server
 def process_server_response(message):

@@ -1,5 +1,6 @@
 import socket
 import threading
+import sys
 
 # Global dictionary to hold client connections (username: socket)
 clients = {}
@@ -15,12 +16,6 @@ def initialize_server(port):
     server_socket.listen(10)
     return server_socket
 
-# checks if a string consists of only letters and numbers
-def is_alphanumeric(string: str):
-    for c in string:
-        if not ((c.upper() >= 'A' and c.upper() < 'Z') or (c >= '0' and c <= '9')):
-            return False
-    return True
 
 # Function to handle each client connection
 def client_handler(client_socket, client_address):
@@ -126,6 +121,10 @@ def broadcast(message, sender=None):
 
 # Main function to start the server
 def main():
+    if(len(sys.argv) != 3):
+        print("usage: python3 server.py <svr_port>")
+
+
     port = 12345  # Define the port number
     server_socket = initialize_server(port)
     print(f"Server started on port {port}")
