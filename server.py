@@ -60,19 +60,21 @@ def client_handler(client_socket, client_address):
                 broadcast(f"{username} has joined the chat!", username)
 
                 # Report back to the client they've successfully been added
-                client_socket.send("JOIN Success:Connected to server!")
+                client_socket.send("JOIN Success:Connected to server!".encode())
+                continue
 
             # Handle LIST command
             elif command == "LIST":
                 # Send a list of all connected clients to the requester
                 client_list = "\n".join(clients.keys())
                 client_socket.send(f"LIST Success:{client_list}".encode())
+                continue
 
             # Handle MESG command
             elif command == "MESG":
                 # Make sure the correct number of args has been passed
                 if len(args) < 2:
-                    client_socket.send(f"MESG Error: No Message")
+                    client_socket.send(f"MESG Error: No Message".encode())
                     continue
 
                 # parse user and message 
@@ -93,7 +95,7 @@ def client_handler(client_socket, client_address):
                 # Broadcast the message to all clients except the sender
                 broadcast(f"{username}: {broadcast_message}", username)
                 client_socket.send(f"BCST Success: Message Broadcast".encode())
-                break
+                continue
 
             # Handle QUIT command
             elif command == "QUIT":
@@ -101,7 +103,8 @@ def client_handler(client_socket, client_address):
 
             # Handle unknown commands
             else:
-                client_socket.send("Unknown command".encode())
+                client_socket.send("NULL Error: Unknown command".encode())
+                continue
 
         except Exception as e:
             print(f"Error: {e}")
@@ -109,6 +112,7 @@ def client_handler(client_socket, client_address):
 
     # Remove the client from the list and close the connection
     if username:
+        client_socket.send("QUIT Success: Disconnected from server.".encode())
         client_socket.close()
         del clients[username]
         # Broadcast a message informing others of the client's departure
