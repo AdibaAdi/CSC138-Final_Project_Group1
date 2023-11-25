@@ -117,7 +117,10 @@ def client_handler(client_socket, client_address):
 def broadcast(message, sender=None):
     for username, client_socket in clients.items():
         if username != sender:
-            client_socket.send(message.encode())
+            try:
+                client_socket.send(message.encode())
+            except Exception as e:
+                print("Error: {e}")
 
 # Main function to start the server
 def main():
@@ -135,8 +138,11 @@ def main():
             client_socket, client_address = server_socket.accept()
             # Start a new thread to handle each client
             threading.Thread(target=client_handler, args=(client_socket, client_address)).start()
-    except:
+    except KeyboardInterrupt as ki:
         server_socket.close()
+        return 0
+    except Exception as e:
+        print(f"Error: {e}")
         return 1
     
 
