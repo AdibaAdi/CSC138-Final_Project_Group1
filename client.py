@@ -15,7 +15,7 @@ def send_and_receive(message:str):
         cli_socket.sendto(message.encode(),(server_name, server_port))
         return cli_socket.recv(1024).decode()
     except:
-        return ''
+        return 'Failed to get Response'
 
 # checks if a string consists of only letters and numbers
 def is_alphanumeric(string: str):
