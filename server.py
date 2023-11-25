@@ -11,7 +11,7 @@ def initialize_server(port):
     # Create a TCP/IP socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Bind the socket to the server address and port
-    server_socket.bind(('', port))
+    server_socket.bind(('', int(port)))
     # Enable the server to accept connections, with a backlog of 10 clients
     server_socket.listen(10)
     return server_socket
@@ -124,11 +124,12 @@ def broadcast(message, sender=None):
 
 # Main function to start the server
 def main():
-    if(len(sys.argv) != 3):
+    if(len(sys.argv) != 2):
         print("usage: python3 server.py <svr_port>")
+        sys.exit(1)
 
-
-    port = 12345  # Define the port number
+    
+    port = sys.argv[1]  # Define the port number
     server_socket = initialize_server(port)
     print(f"Server started on port {port}")
 
@@ -142,6 +143,7 @@ def main():
         server_socket.close()
         return 0
     except Exception as e:
+        server_socket.close()
         print(f"Error: {e}")
         return 1
     

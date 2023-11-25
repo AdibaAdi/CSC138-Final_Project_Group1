@@ -26,6 +26,7 @@ def is_alphanumeric(string: str):
 
 # process response messages from the server
 def process_server_response(message):
+    global client_is_connected
     print(message)
     if message.split(':')[0] == "QUIT Success":
         client_is_connected = False
