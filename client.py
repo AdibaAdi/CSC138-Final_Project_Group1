@@ -50,8 +50,8 @@ def main():
         join_args = join_command.split()
 
         # if the user's input is invalid in any way, continue to prompt for valid input
-        if len(join_args != 2): continue
-        if len(join_args[1] < 1): continue
+        if len(join_args) != 2: continue
+        if len(join_args[1]) < 1: continue
         if not is_alphanumeric(join_args[1]): continue
         if join_args[0] != "JOIN": continue
         
