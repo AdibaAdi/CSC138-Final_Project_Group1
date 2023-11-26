@@ -32,7 +32,6 @@ def client_handler(client_socket, cli_address):
             command = message_split[0]
             args = message_split[1:-1]
             username = message_split[-1]
-
             # Handle JOIN command
             if command == "JOIN":
                 # Check if username already exists or if client limit is reached
@@ -59,7 +58,7 @@ def client_handler(client_socket, cli_address):
             # Handle LIST command
             elif command == "LIST":
                 # Send a list of all connected clients to the requester
-                client_list = "\n".join(clients.keys())
+                client_list = ",".join(clients.keys())
                 client_socket.send(f"{client_list}".encode())
                 continue
 
@@ -93,11 +92,9 @@ def client_handler(client_socket, cli_address):
             elif command == "QUIT":
                 if username:
                     client_socket.send(f"{username} is quitting the server".encode())
-                    client_socket.close()
                     del clients[username]
-                    # Broadcast a message informing others of the client's departure
                     broadcast(f"{username} left")
-                break
+                continue
 
             # Handle unknown commands
             else:
