@@ -38,8 +38,12 @@ def handle_broadcasts():
         try:
             message = cli_socket.recv(1024).decode()
             print(message)
+            # Close client after quit message is processed
+            if message.__contains__("quitting"):
+                client_is_connected = False
+                cli_socket.close()
+                sys.exit(1)
         except:
-            client_is_connected = False
             break
 
 def main():
