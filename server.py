@@ -71,7 +71,6 @@ def client_handler(client_socket, cli_address):
 
                 # parse user and message
                 target_user, user_message = args[0], " ".join(args[1:])
-                print(" ".join(args[1:]))
 
                 # Check if the target user exists and send them the message
                 if target_user in clients:
